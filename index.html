@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Inspect local PCM16 WAV bytes and per-channel sample measurements, then download a factual handoff. No uploads, playback or account.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>WAV Audio Preflight — local PCM16 inspector</title>
+<style>
+:root{color-scheme:light;--ink:#18372b;--muted:#435e50;--green:#17613e;--line:#b7cebf;--pale:#edf5ef;--white:#fff;--error:#8b291e}
+*{box-sizing:border-box}body{margin:0;background:#f7faf7;color:var(--ink);font:17px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif}main{max-width:1080px;margin:auto;padding:32px 24px 64px}h1{font-size:clamp(2rem,5vw,3.1rem);line-height:1.15;letter-spacing:-.03em;margin:8px 0 16px}h2{font-size:1.5rem;line-height:1.25;margin:0 0 14px}h3{font-size:1.12rem;margin:0 0 12px}p{margin:10px 0 18px}a{color:#155a3a;text-underline-offset:3px}a:hover{text-decoration-thickness:2px}.eyebrow{font-size:.83rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}.intro{max-width:790px}.notice{border-left:4px solid var(--green);padding:10px 16px;background:var(--pale);margin:20px 0}.panel{padding:24px;background:var(--white);border:1px solid var(--line);border-radius:12px;margin:24px 0}.muted,small{color:var(--muted)}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}button,input{font:inherit}button,.filebox{border:1px solid var(--green);border-radius:6px;min-height:46px}button{padding:9px 16px;color:white;background:var(--green);font-weight:600;cursor:pointer}.secondary{color:var(--green);background:white}button:disabled{color:#586c60;background:#e6eee8;border-color:#a9bcaf;cursor:not-allowed}button:hover:not(:disabled){filter:brightness(.95)}:focus-visible{outline:3px solid #a15d00;outline-offset:3px}.filebox{display:block;background:#f5faf6;padding:16px;margin:16px 0}.filebox>span{display:block;font-weight:700;margin-bottom:8px}input[type=file]{display:block;max-width:100%;width:100%;padding:2px;font-size:1rem}input::file-selector-button{font:inherit;padding:8px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);margin-right:8px;cursor:pointer}#status{font-weight:600;margin:16px 0 0;overflow-wrap:anywhere}#status[data-error=true]{color:var(--error)}progress{width:100%;height:18px;margin-top:12px}#selected-name{font:14px/1.5 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:20px 0}.summary div{border-left:3px solid var(--line);padding-left:12px}.summary dt{font-size:.85rem;color:var(--muted)}.summary dd{font-size:1.14rem;font-weight:700;margin:3px 0;overflow-wrap:anywhere}.channels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.channel{background:#f3f8f3;border:1px solid var(--line);border-radius:8px;padding:20px}.channel dl{margin:0}.channel dl>div{display:flex;justify-content:space-between;gap:14px;border-top:1px solid #d4e2d8;padding:7px 0}.channel dt{font-size:.92rem}.channel dd{font-variant-numeric:tabular-nums;font-weight:650;margin:0;text-align:right;overflow-wrap:anywhere}.channel p{font-size:.91rem;margin:16px 0 0}details{margin:18px 0}summary{font-weight:650;cursor:pointer;padding:7px 0;min-height:44px}pre{font:14px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f7f4;padding:14px;border-radius:5px}code{font-family:ui-monospace,Consolas,monospace;font-size:.9em}ul,ol{padding-left:24px}li{margin:7px 0}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.88rem}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-weight:650}footer{border-top:1px solid var(--line);padding-top:22px;margin-top:32px;font-size:.94rem}[hidden]{display:none!important}@media(max-width:600px){main{padding:22px 16px 44px}.panel{padding:18px}.channels{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr;gap:16px}.channel{padding:16px}.controls>button{flex:1 1 140px}.channel dl>div{gap:8px}}@media print{body{background:white}main{max-width:none}button,input,.filebox{display:none}.panel,.channel{break-inside:avoid}}
+</style>
+</head>
+<body>
+<main>
+<header class="intro">
+<div class="eyebrow">Browser-local · bytes and samples</div>
+<h1>WAV Audio Preflight</h1>
+<p>Inspect the structure and channel samples of a local PCM16 WAV file. Download a factual handoff for a sound volunteer or recording reviewer, without uploading or changing the audio.</p>
+<p class="notice">These are file and sample measurements, not a sound-quality score. This page does not play or record audio, assess intelligibility, or predict transcript or translation accuracy.</p>
+</header>
+<section class="panel" aria-labelledby="choose-heading">
+<h2 id="choose-heading">1. Choose a file</h2>
+<p>Supports little-endian RIFF/WAVE, uncompressed signed 16-bit PCM, one or two channels, 8,000–96,000 Hz, up to <strong>16 MiB (16,777,216 bytes)</strong>. A filename or MIME type is not used to decide its format.</p>
+<label class="filebox"><span>Local WAV file</span><input id="file" type="file" accept=".wav,audio/wav,audio/x-wav" aria-describedby="privacy"></label>
+<p id="privacy" class="muted">Files stay in browser memory. No upload, analytics, storage, microphone or playback access. A downloaded report includes the escaped filename and measurements, but no audio or metadata payloads. Share it only with people who need it.</p>
+<div class="controls"><button id="fixture" type="button" class="secondary">Download synthetic WAV</button><button id="reset" type="button" class="secondary">Reset</button></div>
+<p id="fixture-message" role="status" class="muted"></p>
+<details><summary>Try the reproducible 8-frame example</summary>
+<p>Download the 76-byte synthetic WAV, then select that downloaded file above. It contains no recorded speech. At 8,000 Hz its 8 stereo frames last 0.001 seconds.</p>
+<pre>Channel 1: 0, 32767, -32768, 16384, -16384, 32, -32, 0
+Channel 2: 0, 0, 0, 0, 0, 0, 0, 0</pre>
+<p>Expected channel 1: normalized peak 1; RMS approximately 0.559010384; 2 exact zeros; 4 samples within ±32 inclusive; one sample at each signed endpoint. Channel 2: peak and RMS 0; 8 zeros; 8 samples within ±32; no endpoints. See the measurement definitions below before interpreting these values.</p>
+</details>
+<p id="selected-name"></p>
+<p id="status" role="status" aria-live="polite">No file selected.</p>
+<progress id="progress" aria-label="Frames measured" hidden></progress>
+</section>
+<section id="results" class="panel" aria-labelledby="results-heading" hidden>
+<h2 id="results-heading" tabindex="-1">2. Inspect the measurements</h2>
+<p id="context"></p>
+<dl id="summary" class="summary"></dl>
+<p class="muted">Channels are measured independently in stored interleave order; channel numbers do not establish microphone or speaker identity. Displayed ratios and seconds are rounded to 9 decimal places. The JSON preserves the calculated JavaScript numbers.</p>
+<div id="channels" class="channels"></div>
+<details><summary id="chunks-label">Chunk structure</summary><p>Only <code>fmt </code> and <code>data</code> are interpreted. Other payloads are skipped; their meaning and nested contents are not validated. Offsets below are zero-based byte positions of chunk headers.</p><div class="table-wrap" tabindex="0" aria-label="Chunk table; scroll horizontally if needed"><table><thead><tr><th scope="col">Chunk ID (hex)</th><th scope="col">Offset (bytes)</th><th scope="col">Payload (bytes)</th><th scope="col">Pad (bytes)</th><th scope="col">Treatment</th></tr></thead><tbody id="chunks"></tbody></table></div></details>
+<h2>3. Download the handoff</h2>
+<p>The report records the supported format, thresholds, per-channel statistics and their limits. It is JSON, not a spreadsheet or an audio conversion. The original file is never rewritten.</p>
+<button id="export" type="button" disabled>Download report JSON</button>
+<p id="export-message" class="muted" role="status"></p>
+</section>
+<section class="panel" aria-labelledby="meaning-heading">
+<h2 id="meaning-heading">What the numbers mean</h2>
+<ul>
+<li><strong>Frames and duration:</strong> one frame contains one signed sample from each channel. Frames = data bytes ÷ block alignment; seconds = frames ÷ sample rate. Channel sample count equals frame count.</li>
+<li><strong>Peak:</strong> maximum absolute sample value ÷ 32,768. Signed values range from −32,768 to +32,767, so the negative endpoint has magnitude 1 and the positive endpoint is about 0.999969482.</li>
+<li><strong>RMS:</strong> square root of the mean of squared samples, divided by 32,768. This is a sample-domain amplitude measure, not calibrated loudness, LUFS or a true-peak measurement.</li>
+<li><strong>Endpoint samples:</strong> counts of −32,768 and +32,767, separately. Their presence alone does not prove clipping or identify its cause. Review the source context in your usual audio workflow.</li>
+<li><strong>Near-zero samples:</strong> count where absolute integer amplitude is ≤32, inclusive (32 ÷ 32,768 = 0.0009765625). This fixed diagnostic threshold is arbitrary, not a silence or intelligibility standard. Exact zeros are counted separately.</li>
+</ul>
+<p>A quiet or unlike channel may be intentional. Confirm the intended channel routing, recording length and source context with the person who made the file. These statistics cannot establish equipment quality, hearing safety, correct language, or readiness for a production upload.</p>
+<details><summary>Supported bytes and explicit rejection policy</summary>
+<ul>
+<li>The outer header must be <code>RIFF</code> with type <code>WAVE</code>. Its declared size plus 8 must equal the complete file length; trailing or truncated bytes are rejected.</li>
+<li>Exactly one <code>fmt </code> chunk and one nonempty <code>data</code> chunk, in either order. At most 256 chunks total. Every header and payload must fit, including one padding byte after any odd payload length. The padding value is not interpreted.</li>
+<li>Format tag 1, signed 16-bit little-endian samples, one or two channels and an integer rate of 8,000–96,000 Hz. The <code>fmt </code> payload must be 16 bytes, or 18 bytes with <code>cbSize = 0</code>. Other format payloads are unsupported by this tool, not necessarily invalid WAV files.</li>
+<li>Block alignment must equal channels × 2, byte rate must equal sample rate × block alignment, and data bytes must be an exact positive multiple of block alignment. Empty data is rejected.</li>
+<li>All other chunk payloads are opaque: their outer lengths and padding are checked, their bytes are never displayed or semantically validated. No assumption of a 44-byte header. Compressed/float/extensible, RF64 and big-endian RIFX files are unsupported.</li>
+</ul>
+<p>Opening the picker, changing the file or resetting clears previous results and disables the old export. Canceling the picker leaves no report. Older reads cannot replace newer results. Nothing persists after reload.</p>
+</details>
+</section>
+<footer>
+<p>Original AI-assisted resource by <a href="https://pewtranslate.com">PewTranslate</a>. Live translation accounts are closed; this standalone inspector needs no account. For a physical audio-input and rehearsal checklist, see <a href="https://pewtranslate.com/en/guides/set-up-live-translation-for-your-church">the sound-team setup guide</a>. It is context, not a WAV specification or evidence of an available production service.</p>
+<p>Structure references: Microsoft’s <a href="https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff-">RIFF description</a> and <a href="https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/ns-mmeapi-waveformatex">WAVEFORMATEX fields</a>. This intentionally limited inspector is not a format certification. MIT licensed, © 2026 szj2ys.</p>
+<noscript>This inspector requires JavaScript for local byte calculations. No file is uploaded if JavaScript is unavailable.</noscript>
+</footer>
+</main>
+<script>
+'use strict';
+(() => {
+const MAX_BYTES = 16777216, MAX_CHUNKS = 256, NEAR_ZERO = 32;
+const $ = id => document.getElementById(id);
+let generation = 0, reader = null, report = null;
+const status = (message, error = false) => { $('status').textContent = message; $('status').dataset.error = String(error); };
+function clear(message = 'No file selected.') {
+  generation++;
+  if (reader && reader.readyState === FileReader.LOADING) reader.abort();
+  reader = null; report = null;
+  $('results').hidden = true; $('export').disabled = true; $('progress').hidden = true;
+  $('selected-name').textContent = ''; $('channels').replaceChildren(); $('summary').replaceChildren(); $('chunks').replaceChildren();
+  $('export-message').textContent = ''; status(message);
+}
+function asciiName(value) {
+  return Array.from(value, c => {
+    const n = c.codePointAt(0);
+    if (n >= 32 && n <= 126 && c !== '\\') return c;
+    if (c === '\\') return '\\\\';
+    return n <= 65535 ? '\\u' + n.toString(16).padStart(4, '0') : '\\u{' + n.toString(16) + '}';
+  }).join('');
+}
+function download(bytes, type, filename) {
+  const url = URL.createObjectURL(new Blob([bytes], {type}));
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function synthetic() {
+  const b = new ArrayBuffer(76), v = new DataView(b);
+  const word = (at, s) => Array.from(s).forEach((c, i) => v.setUint8(at + i, c.charCodeAt(0)));
+  word(0, 'RIFF'); v.setUint32(4, 68, true); word(8, 'WAVE'); word(12, 'fmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 2, true); v.setUint32(24, 8000, true); v.setUint32(28, 32000, true);
+  v.setUint16(32, 4, true); v.setUint16(34, 16, true); word(36, 'data'); v.setUint32(40, 32, true);
+  [0, 32767, -32768, 16384, -16384, 32, -32, 0].forEach((n, i) => v.setInt16(44 + i * 4, n, true));
+  return b;
+}
+function parse(buffer) {
+  const v = new DataView(buffer), size = v.byteLength;
+  const id = at => String.fromCharCode(...new Uint8Array(buffer, at, 4));
+  const fail = message => { throw new Error(message); };
+  if (size > MAX_BYTES) fail('File exceeds this tool’s 16 MiB limit.');
+  if (size < 12) fail('Truncated: fewer than 12 bytes for the RIFF/WAVE header.');
+  if (id(0) !== 'RIFF') fail('Unsupported by this tool: expected little-endian RIFF, not RF64, RIFX or another container.');
+  if (id(8) !== 'WAVE') fail('Unsupported by this tool: RIFF type is not WAVE.');
+  if (v.getUint32(4, true) + 8 !== size) fail('RIFF length mismatch: declared size must exactly match the file; trailing or truncated bytes are not accepted.');
+  let offset = 12, format = null, data = null;
+  const chunks = [];
+  while (offset < size) {
+    if (chunks.length >= MAX_CHUNKS) fail('Unsupported by this tool: more than 256 chunks.');
+    if (size - offset < 8) fail('Truncated chunk header at byte ' + offset + '.');
+    const name = id(offset), length = v.getUint32(offset + 4, true), start = offset + 8, end = start + length, pad = length % 2;
+    if (end > size) fail('Truncated chunk payload at byte ' + offset + '.');
+    if (end + pad > size) fail('Missing odd-length chunk padding at byte ' + end + '.');
+    const idHex = Array.from(new Uint8Array(buffer, offset, 4), n => n.toString(16).padStart(2, '0')).join(' ');
+    chunks.push({id_hex: idHex, header_offset_bytes: offset, payload_bytes: length, padding_bytes: pad, treatment: name === 'fmt ' ? 'format' : name === 'data' ? 'samples' : 'opaque; skipped'});
+    if (name === 'fmt ') {
+      if (format) fail('Ambiguous: duplicate fmt chunk.');
+      if (length !== 16 && length !== 18) fail('Unsupported by this tool: fmt payload must be 16 bytes, or 18 bytes with zero cbSize.');
+      if (v.getUint16(start, true) !== 1) fail('Unsupported by this tool: format tag must be 1 (uncompressed PCM); float, compressed and extensible formats are not supported.');
+      if (length === 18 && v.getUint16(start + 16, true) !== 0) fail('Unsupported by this tool: 18-byte fmt requires cbSize = 0.');
+      const channels = v.getUint16(start + 2, true), rate = v.getUint32(start + 4, true), byteRate = v.getUint32(start + 8, true), align = v.getUint16(start + 12, true), bits = v.getUint16(start + 14, true);
+      if (channels !== 1 && channels !== 2) fail('Unsupported by this tool: only one or two channels.');
+      if (rate < 8000 || rate > 96000) fail('Unsupported by this tool: sample rate must be 8,000–96,000 Hz.');
+      if (bits !== 16) fail('Unsupported by this tool: only signed 16-bit PCM samples.');
+      if (align !== channels * 2) fail('Inconsistent block alignment: expected channels × 2 bytes.');
+      if (byteRate !== rate * align) fail('Inconsistent byte rate: expected sample rate × block alignment.');
+      format = {container: 'little-endian RIFF/WAVE', format_tag: 1, encoding: 'signed little-endian PCM16', channels, sample_rate_hz: rate, bits_per_sample: bits, block_align_bytes: align, byte_rate_bytes_per_second: byteRate, fmt_payload_bytes: length};
+    } else if (name === 'data') {
+      if (data) fail('Ambiguous: duplicate data chunk.');
+      data = {start, length};
+    }
+    offset = end + pad;
+  }
+  if (!format) fail('Missing required fmt chunk.');
+  if (!data) fail('Missing required data chunk.');
+  if (!data.length) fail('Empty data chunk: this tool requires at least one complete frame.');
+  if (data.length % format.block_align_bytes !== 0) fail('Partial frame: data length is not a multiple of block alignment.');
+  return {view: v, format, data, chunks, frames: data.length / format.block_align_bytes};
+}
+async function measure(parsed, ticket) {
+  const {view, format, data, frames} = parsed;
+  const channels = Array.from({length: format.channels}, (_, i) => ({channel: i + 1, sample_count: frames, minimum_sample: 32767, maximum_sample: -32768, sum_of_squared_integer_samples: 0, exact_zero_samples: 0, near_zero_samples: 0, negative_endpoint_samples: 0, positive_endpoint_samples: 0}));
+  $('progress').max = frames; $('progress').value = 0; $('progress').hidden = false;
+  for (let first = 0; first < frames; first += 131072) {
+    if (ticket !== generation) return null;
+    const until = Math.min(first + 131072, frames);
+    for (let frame = first; frame < until; frame++) {
+      const at = data.start + frame * format.block_align_bytes;
+      channels.forEach((c, channel) => {
+        const x = view.getInt16(at + channel * 2, true);
+        c.minimum_sample = Math.min(c.minimum_sample, x); c.maximum_sample = Math.max(c.maximum_sample, x);
+        c.sum_of_squared_integer_samples += x * x;
+        if (x === 0) c.exact_zero_samples++;
+        if (Math.abs(x) <= NEAR_ZERO) c.near_zero_samples++;
+        if (x === -32768) c.negative_endpoint_samples++;
+        if (x === 32767) c.positive_endpoint_samples++;
+      });
+    }
+    $('progress').value = until;
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  if (ticket !== generation) return null;
+  return channels.map(c => ({...c, peak_normalized: Math.max(Math.abs(c.minimum_sample), Math.abs(c.maximum_sample)) / 32768, rms_normalized: Math.sqrt(c.sum_of_squared_integer_samples / c.sample_count) / 32768}));
+}
+function el(tag, text) { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; return n; }
+function pair(root, label, value) { const row = el('div'); row.append(el('dt', label), el('dd', String(value))); root.append(row); }
+function show(r) {
+  const s = $('summary');
+  [['Format', 'PCM16 · ' + r.format.channels + ' channel' + (r.format.channels === 1 ? '' : 's')], ['Sample rate', r.format.sample_rate_hz + ' Hz'], ['Frames', r.frame_count], ['Duration', r.duration_seconds.toFixed(9) + ' s'], ['Data payload', r.data_bytes + ' bytes'], ['Block alignment', r.format.block_align_bytes + ' bytes']].forEach(([k, v]) => pair(s, k, v));
+  $('context').textContent = r.context;
+  for (const c of r.channels) {
+    const card = el('section'); card.className = 'channel'; card.append(el('h3', 'Channel ' + c.channel));
+    const dl = el('dl');
+    [['Samples', c.sample_count], ['Minimum integer', c.minimum_sample], ['Maximum integer', c.maximum_sample], ['Peak (÷32,768)', c.peak_normalized.toFixed(9)], ['RMS (÷32,768)', c.rms_normalized.toFixed(9)], ['Exact zeros', c.exact_zero_samples], ['Within ±32 (inclusive)', c.near_zero_samples], ['At −32,768', c.negative_endpoint_samples], ['At +32,767', c.positive_endpoint_samples]].forEach(([k, v]) => pair(dl, k, v));
+    card.append(dl);
+    if (c.near_zero_samples === c.sample_count) card.append(el('p', 'Every sample is within ±32. Confirm whether this channel was intended to contain a signal; this is not a silence classification.'));
+    if (c.negative_endpoint_samples + c.positive_endpoint_samples > 0) card.append(el('p', 'Signed endpoints occur. Review them in context; this count alone does not prove clipping.'));
+    $('channels').append(card);
+  }
+  for (const c of r.chunks) { const row = el('tr'); [c.id_hex, c.header_offset_bytes, c.payload_bytes, c.padding_bytes, c.treatment].forEach(x => row.append(el('td', String(x)))); $('chunks').append(row); }
+  $('chunks-label').textContent = 'Chunk structure (' + r.chunks.length + ' chunks; ' + r.chunks.filter(c => c.treatment.startsWith('opaque')).length + ' opaque payloads skipped)';
+  $('results').hidden = false; $('export').disabled = false;
+}
+function read(file) {
+  return new Promise((resolve, reject) => {
+    const active = new FileReader(); reader = active;
+    active.onload = () => resolve(active.result);
+    active.onerror = () => reject(new Error('File read failed. Select a readable local file and try again.'));
+    active.onabort = () => reject(new Error('File read canceled.'));
+    active.readAsArrayBuffer(file);
+  });
+}
+async function inspect(file) {
+  clear(); const ticket = generation;
+  if (!file) return;
+  $('selected-name').textContent = 'Selected filename (escaped): ' + asciiName(file.name) + ' · ' + file.size + ' bytes';
+  if (file.size > MAX_BYTES) { status('File exceeds this tool’s 16 MiB limit. It was not read.', true); return; }
+  status('Reading the selected file in memory…');
+  try {
+    const buffer = await read(file);
+    if (ticket !== generation) return;
+    reader = null;
+    if (buffer.byteLength !== file.size) throw new Error('Read length differs from the selected file size. No report generated.');
+    const parsed = parse(buffer);
+    status('Measuring each channel… Reset or choose another file to cancel.');
+    const channels = await measure(parsed, ticket);
+    if (ticket !== generation || !channels) return;
+    const demo = new Uint8Array(synthetic()), bytes = new Uint8Array(buffer);
+    const fixtureMatch = bytes.length === demo.length && bytes.every((x, i) => x === demo[i]);
+    report = {
+      report_type: 'WAV Audio Preflight sample measurements', report_version: 1,
+      source_filename_escaped: asciiName(file.name), file_bytes: file.size,
+      context: fixtureMatch ? 'Exact byte match to the bundled synthetic 8-frame example; no recorded speech.' : 'User-selected file; its origin and recording context are not established by this inspector.',
+      synthetic_fixture_exact_byte_match: fixtureMatch,
+      format: parsed.format, data_offset_bytes: parsed.data.start, data_bytes: parsed.data.length,
+      frame_count: parsed.frames, duration_seconds: parsed.frames / parsed.format.sample_rate_hz,
+      channels, chunks: parsed.chunks,
+      definitions: {
+        frame: 'One signed sample per channel; frames = data bytes / block alignment. Each channel sample count equals frame count.',
+        duration_seconds: 'frame_count / sample_rate_hz',
+        signed_sample_range: [-32768, 32767], normalization_divisor: 32768,
+        peak_normalized: 'max(abs(integer samples)) / 32768',
+        rms_normalized: 'sqrt(sum(integer sample squared) / channel sample count) / 32768',
+        endpoint_counts: 'Counts of -32768 and +32767 separately; not proof of clipping.',
+        near_zero_threshold_integer: NEAR_ZERO, near_zero_comparison: 'abs(integer sample) <= 32, inclusive; arbitrary diagnostic threshold, not a silence standard',
+        exact_zero_comparison: 'integer sample === 0',
+        rounding: 'UI ratios/seconds fixed to 9 decimal places. JSON contains calculated JavaScript numbers; sum of integer squares is exact within the 16 MiB bound.'
+      },
+      policy: {maximum_file_bytes: MAX_BYTES, maximum_chunks: MAX_CHUNKS, sample_rate_hz_inclusive: [8000, 96000], fmt_payload: '16 bytes, or 18 bytes with cbSize=0', required_chunks: 'Exactly one fmt and one nonempty data, either order; no trailing bytes', opaque_chunks: 'Outer lengths/padding checked; payloads skipped, contents and nested metadata not validated', padding: 'One required byte after an odd-length payload; value ignored'},
+      limits: [
+        'Per-channel sample-domain measurements only; channel numbering follows stored interleave order, not microphone identity.',
+        'No intelligibility, equipment-quality, hearing-safety, transcript/translation-accuracy or production-readiness conclusion.',
+        'RMS is not calibrated loudness or LUFS; sample peak is not true peak; endpoint counts alone do not establish clipping.',
+        'This report contains no audio or metadata payloads. Filename and measurements may still be sensitive.',
+        'Original file unchanged. No upload, recording, playback or persistent storage. PewTranslate live translation accounts are closed.'
+      ]
+    };
+    show(report); $('progress').hidden = true; status('Supported PCM16 structure parsed. Per-channel measurements are ready below.');
+  } catch (error) {
+    if (ticket !== generation) return;
+    report = null; $('export').disabled = true; $('results').hidden = true; $('progress').hidden = true;
+    status(error instanceof Error ? error.message : 'The selected file could not be read or inspected.', true);
+  }
+}
+$('file').addEventListener('click', () => { clear('Choose a file; canceling leaves no report.'); $('file').value = ''; });
+$('file').addEventListener('change', () => inspect($('file').files[0]));
+$('file').addEventListener('cancel', () => clear('File selection canceled. No report retained.'));
+$('reset').addEventListener('click', () => { clear(); $('file').value = ''; $('fixture-message').textContent = ''; $('file').focus(); });
+$('fixture').addEventListener('click', () => { download(synthetic(), 'audio/wav', 'synthetic-pcm16-stereo.wav'); $('fixture-message').textContent = 'Synthetic WAV download requested. Select that downloaded file above to reproduce its measurements.'; });
+$('export').addEventListener('click', () => { if (!report) return; download(JSON.stringify(report, null, 2) + '\n', 'application/json', 'wav-preflight-report.json'); $('export-message').textContent = 'Report download requested. It contains the escaped filename and measurements, not audio.'; });
+})();
+</script>
+</body>
+</html>
